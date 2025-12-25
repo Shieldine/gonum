@@ -5,14 +5,9 @@
 package transform
 
 import (
-	"errors"
-
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat"
 )
-
-// ErrSVDFailed is returned when a required SVD factorization process fails.
-var ErrSVDFailed = errors.New("transform: SVD factorization failed")
 
 // Umeyama finds the similarity transformation between two sets of points
 // that minimizes the mean squared error between them.
@@ -33,7 +28,7 @@ var ErrSVDFailed = errors.New("transform: SVD factorization failed")
 // Umeyama returns the scale factor c, the rotation matrix R and the translation
 // vector t.
 //
-// If the required SVD fails, Umeyama will return an ErrSVDFailed.
+// If the required SVD fails, Umeyama will return a mat.ErrFailedSVD.
 //
 // minVar is used for detecting a degenerate input by comparing it with the
 // variance of x. This is necessary because a variance equal or close to zero
@@ -82,7 +77,7 @@ func Umeyama(x, y *mat.Dense, minVar float64) (c float64, r *mat.Dense, t *mat.V
 	// Check for degenerate case. This prevents cases of division by zero and mathematical instability due to
 	// very low variance.
 	if varX <= minVar {
-		return 0, nil, nil, mat.DegenerateInputError(varX)
+		return 0, nil, nil, DegenerateInputError(varX)
 	}
 
 	// Center the matrices.
@@ -104,7 +99,7 @@ func Umeyama(x, y *mat.Dense, minVar float64) (c float64, r *mat.Dense, t *mat.V
 	// Singular Value Decomposition
 	var svd mat.SVD
 	if !svd.Factorize(covXY, mat.SVDFull) {
-		return 0, nil, nil, ErrSVDFailed
+		return 0, nil, nil, mat.ErrFailedSVD
 	}
 
 	// Get U and V.

@@ -32,14 +32,6 @@ func (c Condition) Error() string {
 // condition number is above this value, the matrix is considered singular.
 const ConditionTolerance = 1e16
 
-// DegenerateInputError represents an error due to input data with variance
-// below a threshold, which would cause numerical instability.
-type DegenerateInputError float64
-
-func (e DegenerateInputError) Error() string {
-	return fmt.Sprintf("variance too low: %v", float64(e))
-}
-
 const (
 	// CondNorm is the matrix norm used for computing the condition number by routines
 	// in the matrix packages.
@@ -145,6 +137,7 @@ var (
 	ErrSliceLengthMismatch = Error{"mat: input slice length mismatch"}
 	ErrNotPSD              = Error{"mat: input not positive symmetric definite"}
 	ErrFailedEigen         = Error{"mat: eigendecomposition not successful"}
+	ErrFailedSVD           = Error{"mat: SVD factorization failed"}
 )
 
 // ErrorStack represents matrix handling errors that have been recovered by Maybe wrappers.
