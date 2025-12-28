@@ -38,7 +38,10 @@ import (
 //	if u.Var() < myThreshold {
 //	    // Handle degenerate case
 //	}
-//	c, r, t, err := u.Transform()
+//	c, r, t, ok := u.Transform()
+//	if !ok {
+//	    // Handle failure
+//	}
 //
 // For a simple one-call interface with automatic variance checking, use
 // the UmeyamaTransform function instead.
@@ -118,11 +121,12 @@ func (u *Umeyama) Var() float64 {
 
 // Transform computes and returns the similarity transformation parameters.
 //
-// Transform returns the scale factor c, the rotation matrix R and the translation
-// vector t that best align the point sets according to Umeyama's algorithm.
+// Transform returns the scale factor c, the rotation matrix R, the translation
+// vector t, and a boolean ok indicating success. The transformation parameters
+// best align the point sets according to Umeyama's algorithm.
 //
-// If the required SVD fails, Transform will return a mat.ErrFailedSVD.
-func (u *Umeyama) Transform() (c float64, r *mat.Dense, t *mat.VecDense, err error) {
+// If the required SVD fails, Transform will return ok as false.
+func (u *Umeyama) Transform() (c float64, r *mat.Dense, t *mat.VecDense, ok bool) {
 	// Center the matrices.
 	xc := mat.NewDense(u.n, u.m, nil)
 	yc := mat.NewDense(u.n, u.m, nil)
@@ -142,7 +146,7 @@ func (u *Umeyama) Transform() (c float64, r *mat.Dense, t *mat.VecDense, err err
 	// Singular Value Decomposition
 	var svd mat.SVD
 	if !svd.Factorize(covXY, mat.SVDFull) {
-		return 0, nil, nil, mat.ErrFailedSVD
+		return 0, nil, nil, false
 	}
 
 	// Get U and V.
@@ -180,7 +184,7 @@ func (u *Umeyama) Transform() (c float64, r *mat.Dense, t *mat.VecDense, err err
 	t.CopyVec(u.muY)
 	t.AddScaledVec(t, -c, rMuX)
 
-	return c, r, t, nil
+	return c, r, t, true
 }
 
 // UmeyamaTransform finds the similarity transformation between two sets of points
@@ -224,5 +228,12 @@ func UmeyamaTransform(x, y *mat.Dense) (c float64, r *mat.Dense, t *mat.VecDense
 		return 0, nil, nil, DegenerateInputError(u.varX)
 	}
 
-	return u.Transform()
+	var ok bool
+	c, r, t, ok = u.Transform()
+
+	if !ok {
+		return 0, nil, nil, ErrFactorizationFailed
+	}
+
+	return c, r, t, nil
 }

@@ -137,7 +137,6 @@ var (
 	ErrSliceLengthMismatch = Error{"mat: input slice length mismatch"}
 	ErrNotPSD              = Error{"mat: input not positive symmetric definite"}
 	ErrFailedEigen         = Error{"mat: eigendecomposition not successful"}
-	ErrFailedSVD           = Error{"mat: SVD factorization failed"}
 )
 
 // ErrorStack represents matrix handling errors that have been recovered by Maybe wrappers.
