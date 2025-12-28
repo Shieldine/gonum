@@ -5,6 +5,7 @@
 package transform
 
 import (
+	"errors"
 	"testing"
 
 	"gonum.org/v1/gonum/floats/scalar"
@@ -155,14 +156,14 @@ var umeyamaTests = []struct {
 	},
 }
 
-func TestUmeyama(t *testing.T) {
+func TestUmeyamaTransform(t *testing.T) {
 	tol := 1e-14
 
 	for _, test := range umeyamaTests {
 		t.Run(test.name, func(t *testing.T) {
-			scale, rotation, translation, err := Umeyama(test.from, test.to, -1)
+			scale, rotation, translation, err := UmeyamaTransform(test.from, test.to)
 			if err != nil {
-				t.Fatalf("Umeyama returned error: %v", err)
+				t.Fatalf("UmeyamaTransform returned error: %v", err)
 			}
 
 			// Check scale
@@ -188,5 +189,25 @@ func TestUmeyama(t *testing.T) {
 				t.Errorf("unexpected translation vector, |t_got-t_want| = %v", diff)
 			}
 		})
+	}
+}
+
+func TestUmeyamaDegenerateInput(t *testing.T) {
+	from := mat.NewDense(3, 2, []float64{
+		1, 1,
+		1, 1,
+		1, 1,
+	})
+	to := mat.NewDense(3, 2, []float64{
+		2, 2,
+		2, 2,
+		2, 2,
+	})
+
+	_, _, _, err := UmeyamaTransform(from, to)
+
+	var degenerateInputError DegenerateInputError
+	if !errors.As(err, &degenerateInputError) {
+		t.Errorf("Expected DegenerateInputError, got %v", err)
 	}
 }
