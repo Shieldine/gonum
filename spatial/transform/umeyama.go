@@ -230,10 +230,8 @@ func UmeyamaTransform(x, y *mat.Dense) (c float64, r *mat.Dense, t *mat.VecDense
 
 	var ok bool
 	c, r, t, ok = u.Transform()
-
 	if !ok {
 		return 0, nil, nil, ErrFactorizationFailed
 	}
-
 	return c, r, t, nil
 }
